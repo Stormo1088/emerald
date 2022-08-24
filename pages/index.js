@@ -89,8 +89,7 @@ export default function Home() {
     })
   
     console.log("Here is the transactionId: " + transactionId);
-    console.log(newNumber);
-    await fcl.tx(transactionId).onceSealed();
+    await fcl.tx(transactionId).onceSealed(console.log(newNumber));
     executeScript();
     }
 
