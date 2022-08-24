@@ -18,6 +18,9 @@
 			"hashAlgorithm": "SHA3_256",
 			"privateKey": "a8e44c67d4392c33705d346bc87ac7aa8819199ba9fd842d96535b5640964ab0"
 		  }
+		},
+		"jacob-account": {
+			"address": "0x6c0d53c676256e8c"
 		}
 	  },
 	  "deployments": {
