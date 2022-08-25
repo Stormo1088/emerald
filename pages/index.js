@@ -9,10 +9,6 @@ export default function Home() {
   const [newGreeting, setNewGreeting] = useState('');
   const [greeting, setGreeting] = useState('');
   const [txStatus, setTxStatus] = useState("Run Transaction");
-  
-  function runTransaction() {
-    console.log(newGreeting)
-  }
  
   async function executeScript() {
     const response = await fcl.query({
@@ -34,7 +30,7 @@ export default function Home() {
   async function runTransaction() {
     const transactionId = await fcl.mutate({
       cadence: `
-      import HelloWorld from 0xdccd50fb9e7844e6 // THIS WAS MY ADDRESS, USE YOURS
+      import HelloWorld from 0xdccd50fb9e7844e6 //
   
       transaction(myNewGreeting: String) {
   
@@ -55,22 +51,21 @@ export default function Home() {
     })
     
     console.log("Here is the transactionId: " + transactionId);
-    await fcl.tx(transactionId).onceSealed(
-      fcl.tx(transactionId).subscribe(res => {
-        console.log(res);
-        if (res.status === 0 || res.status === 1) {
-          setTxStatus('Pending...');
-        } else if (res.status === 2) {
-          setTxStatus('Finalized...')
-        } else if (res.status === 3) {
-          setTxStatus('Executed...');
-        } else if (res.status === 4) {
-          setTxStatus('Sealed!');
-          setTimeout(() => setTxStatus('run transaction'), 2000);
-        }
-      })
-    );
-    executeScript()
+    await fcl.tx(transactionId).onceSealed();
+    fcl.tx(transactionId).subscribe(res => {
+      console.log(res);
+      if (res.status === 0 || res.status === 1) {
+        setTxStatus('Pending...');
+      } else if (res.status === 2) {
+        setTxStatus('Finalized...')
+      } else if (res.status === 3) {
+        setTxStatus('Executed...');
+      } else if (res.status === 4) {
+        setTxStatus('Sealed!');
+        setTimeout(() => setTxStatus('run transaction'), 2000);
+      }
+    })
+    executeScript();
     }
 
   return (
@@ -93,8 +88,8 @@ export default function Home() {
       <main className={styles.main}>
         <p>{greeting}</p>
         <div className={styles.flex}>
+          <button onClick={runTransaction}>Run Transaction</button>
           <input onChange={(e) => setNewGreeting(e.target.value)} placeholder="Hello, Idiots!" />
-          <button onClick={runTransaction}>{txStatus}</button>
         </div>
       </main>
     </div>
