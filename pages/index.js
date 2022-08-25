@@ -8,14 +8,10 @@ export default function Home() {
 
   const [newGreeting, setNewGreeting] = useState('');
   const [greeting, setGreeting] = useState('');
-  const [newNumber, setNewNumber] = useState('');
+  const [txStatus, setTxStatus] = useState("Run Transaction");
   
   function runTransaction() {
     console.log(newGreeting)
-  }
-
-  function runTransaction() {
-    console.log(newNumber)
   }
  
   async function executeScript() {
@@ -57,97 +53,25 @@ export default function Home() {
       authorizations: [fcl.authz],
       limit: 999
     })
-  
+    
     console.log("Here is the transactionId: " + transactionId);
-    await fcl.tx(transactionId).onceSealed();
-    executeScript();
-    }useEffect(() => {
-      runTransaction()
-  }, [])
-
-  async function runTransactionNumber() {
-    const transactionId = await fcl.mutate({
-      cadence: `
-      import SimpleTest from 0x6c0d53c676256e8c
-  
-      transaction(myNewNumber: Int) {
-  
-        prepare(signer: AuthAccount) {}
-  
-        execute {
-          SimpleTest.updateNumber(newNumber: myNewNumber)
+    await fcl.tx(transactionId).onceSealed(
+      fcl.tx(transactionId).subscribe(res => {
+        console.log(res);
+        if (res.status === 0 || res.status === 1) {
+          setTxStatus('Pending...');
+        } else if (res.status === 2) {
+          setTxStatus('Finalized...')
+        } else if (res.status === 3) {
+          setTxStatus('Executed...');
+        } else if (res.status === 4) {
+          setTxStatus('Sealed!');
+          setTimeout(() => setTxStatus('run transaction'), 2000);
         }
-      }
-      `,
-      args: (arg, t) => [
-        arg(newNumber, t.Int)
-      ],
-      proposer: fcl.authz,
-      payer: fcl.authz,
-      authorizations: [fcl.authz],
-      limit: 999
-    })
-  
-    console.log("Here is the transactionId: " + transactionId);
-    await fcl.tx(transactionId).onceSealed(console.log(newNumber));
-    executeScript();
+      })
+    );
+    executeScript()
     }
-
-  async function executeScriptNumber() {
-    const number = await fcl.query({
-      cadence: `
-      import SimpleTest from 0x6c0d53c676256e8c
-
-      pub fun main(): Int {
-          return SimpleTest.number
-      }
-      `, 
-      args: (arg, t) => [] // ARGUMENTS GO IN HERE
-    })
-    setNewNumber(number)
-    console.log("this " + number)
-  }
-  useEffect(() => {
-    executeScriptNumber()
-  }, [])
-
-  async function executeScriptAllCadances() {
-    const response = await fcl.query({
-      cadence: `
-      pub fun main(
-        a: Int, 
-        b: String, 
-        c: UFix64, 
-        d: Address, 
-        e: Bool,
-        f: String?,
-        g: [Int],
-        h: {String: Address}
-      ): Bool {
-        return e
-      }
-      `,
-        args: (arg, t) => [
-        arg("2", t.Int),
-        arg("Jacob is so cool", t.String),
-        arg("5.0", t.UFix64),
-        arg("0x6c0d53c676256e8c", t.Address),
-        arg(true, t.Bool),
-        arg(null, t.Optional(t.String)),
-        arg([1, 2, 3], t.Array(t.Int)),
-        arg(
-          [
-            { key: "FLOAT", value: "0x2d4c3caffbeab845" },
-            { key: "EmeraldID", value: "0x39e42c67cc851cfb" }
-          ], 
-          t.Dictionary({ key: t.String, value: t.Address })
-        )
-      ]
-    })
-    console.log("A response from our script: " + response);
-  }useEffect(() => {
-    executeScriptAllCadances()
-  }, [])
 
   return (
     <div>
@@ -159,21 +83,19 @@ export default function Home() {
 
       <Nav />
 
-      <main className={styles.main}>
+      <div className={styles.welcome}>
         <h1 className={styles.title}>
           Welcome to my <a href="https://academy.ecdao.org" target="_blank">Emerald DApp!</a>
         </h1>
-        <p>{newGreeting}</p>
+        <p>This is a DApp created by Jacob Tucker (<i>tsnakejake#8364</i>).</p>
+      </div>
 
-        <div className={styles.flex}>
-          <button onClick={runTransaction}>Run Transaction</button>
-          <input onChange={(e) => setNewGreeting(e.target.value)} placeholder="Hello, Idiots!" />
-        </div>
-        <div>
-          <button onClick={runTransactionNumber}>Fate</button>
-          <input onChange={(e) => setNewNumber(e.target.value)} placeholder="Mayo Chiki" />
-        </div>
+      <main className={styles.main}>
         <p>{greeting}</p>
+        <div className={styles.flex}>
+          <input onChange={(e) => setNewGreeting(e.target.value)} placeholder="Hello, Idiots!" />
+          <button onClick={runTransaction}>{txStatus}</button>
+        </div>
       </main>
     </div>
   )
